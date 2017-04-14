@@ -5,6 +5,7 @@ import com.cloudbees.plugins.credentials.impl.*
 import hudson.model.*
 import jenkins.model.*
 import hudson.plugins.groovy.*
+import com.cloudbees.jenkins.plugins.sshcredentials.impl.BasicSSHUserPrivateKey
 
 def jobScript = new File('/usr/share/jenkins/jenkins_pipeline.groovy')
 def jobManagement = new JenkinsJobManagement(System.out, [:], new File('.'))
@@ -17,7 +18,7 @@ new DslScriptLoader(jobManagement).with {
 }
 
 String gitUser = new File('/usr/share/jenkins/gituser')?.text ?: "changeme"
-String gitPass = new File('/usr/share/jenkins/gitpass')?.text ?: "changeme"
+String gitKey = new File('/usr/share/jenkins/gitkey')?.text ?: "changeme"
 
 boolean gitCredsMissing = SystemCredentialsProvider.getInstance().getCredentials().findAll {
 	it.getDescriptor().getId() == 'git'
@@ -25,9 +26,10 @@ boolean gitCredsMissing = SystemCredentialsProvider.getInstance().getCredentials
 
 if (gitCredsMissing) {
 	println "Credential [git] is missing - will create it"
+	BasicSSHUserPrivateKey.DirectEntryPrivateKeySource privateKey = new BasicSSHUserPrivateKey.DirectEntryPrivateKeySource(gitKey)
 	SystemCredentialsProvider.getInstance().getCredentials().add(
-			new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, 'git',
-					"GIT credential", gitUser, gitPass))
+			new BasicSSHUserPrivateKey(CredentialsScope.GLOBAL, 'git',
+					gitUser, privateKey, null, "Git Credentials"))
 	SystemCredentialsProvider.getInstance().save()
 }
 

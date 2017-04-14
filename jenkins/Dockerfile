@@ -5,14 +5,13 @@
 
 FROM jenkins:2.19.1
 ARG gituser=changeme
-ARG gitpass=changeme
 
 MAINTAINER Marcin Grzejszczak <mgrzejszczak@pivotal.io>
 
 COPY seed/init.groovy /usr/share/jenkins/ref/init.groovy
 COPY seed/jenkins_pipeline.groovy /usr/share/jenkins/jenkins_pipeline.groovy
-COPY seed/settings.xml /usr/share/jenkins/settings.xml
 COPY seed/gradle.properties /usr/share/jenkins/gradle.properties
+COPY seed/gitkey /usr/share/jenkins/gitkey
 COPY plugins.txt /usr/share/jenkins/plugins.txt
 
 USER root
@@ -20,7 +19,7 @@ USER root
 # Generated via `start.sh`. If you don't want to provide it just put empty
 # files there
 RUN printf "%s" "${gituser}" > /usr/share/jenkins/gituser
-RUN printf "%s" "${gitpass}" > /usr/share/jenkins/gitpass
+# RUN printf "%s" "${gitpass}" > /usr/share/jenkins/gitpass
 
 USER root
 

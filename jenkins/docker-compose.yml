@@ -5,7 +5,6 @@ services:
       context: .
       args:
         gituser: "${PIPELINE_GIT_USERNAME}"
-        gitpass: "${PIPELINE_GIT_PASSWORD}"
     environment:
       FORKED_ORG: "${FORKED_ORG}"
       EXTERNAL_IP: "${EXTERNAL_IP}"
@@ -14,9 +13,9 @@ services:
       - "8080:8080"
     volumes:
       - /var/jenkins_home
-    links:
-      - artifactory
-  artifactory:
-    image: jfrog-docker-registry.bintray.io/artifactory/artifactory-oss:latest
-    ports:
-      - "8081:8081"
+    # links:
+    #   - artifactory
+  # artifactory:
+  #   image: jfrog-docker-registry.bintray.io/artifactory/artifactory-oss:latest
+  #   ports:
+  #     - "8081:8081"

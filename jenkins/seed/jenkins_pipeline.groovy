@@ -2,13 +2,13 @@ import javaposse.jobdsl.dsl.DslFactory
 
 DslFactory factory = this
 
-String repos = 'https://github.com/marcingrzejszczak/github-analytics,https://github.com/marcingrzejszczak/github-webhook'
+String repos = 'https://github.com/pivotalservices/sample-jenkin-pipeline'
 
 factory.job('jenkins-pipeline-seed') {
     scm {
         git {
             remote {
-                github('spring-cloud/spring-cloud-pipelines')
+                url('git@github.com:pivotalservices/sample-jenkin-pipeline.git')
             }
             branch('master')
         }
@@ -38,7 +38,7 @@ factory.job('jenkins-pipeline-seed') {
     steps {
         gradle("clean build")
         dsl {
-            external('jenkins/jobs/jenkins_pipeline_jenkinsfile_sample.groovy')
+            external('jenkins/jobs/pipeline.groovy','jenkins/jobs/pipeline-view.groovy')
             removeAction('DISABLE')
             removeViewAction('DELETE')
             ignoreExisting(false)
