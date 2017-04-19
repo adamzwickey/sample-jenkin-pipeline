@@ -28,6 +28,7 @@ String testEnv = binding.variables["TEST_ENV"]
 String cfTestCredentialId = binding.variables["CF_TEST_CREDENTIAL_ID"] ?: "cf-test"
 String cfStageCredentialId = binding.variables["CF_STAGE_CREDENTIAL_ID"] ?: "cf-stage"
 String cfProdCredentialId = binding.variables["CF_PROD_CREDENTIAL_ID"] ?: "cf-prod"
+String libRepoCredId = binding.variables["LIB_REPO_CRED_ID"] ?: "libRepoCred"
 
 
 // we're parsing the REPOS parameter to retrieve list of repos to build
@@ -55,10 +56,9 @@ parsedRepos.each {
 			scm(cronValue)
 		}
 		wrappers {
-		  injectPasswords {
-		    injectGlobalPasswords()
+			credentialsBinding {
+				usernamePassword('libRepoUsername', 'libRepoPassword', libRepoCredId)
 			}
-
 			environmentVariables {
 				environmentVariables(defaults.defaultEnvVars)
 			}
@@ -362,7 +362,7 @@ parsedRepos.each {
 	dsl.job("${folderDir}/${projectName}-promote-new-release") {
 		wrappers {
 			credentialsBinding {
-				usernamePassword('cfUsername', 'cfPassword', cfTestCredentialId)
+				usernamePassword('cfUsername', 'cfPassword', cfProdCredentialId)
 			}
 			parameters {
 					stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
@@ -392,7 +392,7 @@ parsedRepos.each {
 	dsl.job("${folderDir}/${projectName}-remove-canary") {
 		wrappers {
 			credentialsBinding {
-				usernamePassword('cfUsername', 'cfPassword', cfTestCredentialId)
+				usernamePassword('cfUsername', 'cfPassword', cfProdCredentialId)
 			}
 			parameters {
 					stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
