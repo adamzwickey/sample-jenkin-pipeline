@@ -13,12 +13,38 @@ def jobManagement = new JenkinsJobManagement(System.out, [:], new File('.'))
 println "Creating the seed job"
 new DslScriptLoader(jobManagement).with {
 	runScript(jobScript.text
-			.replace('https://github.com/marcingrzejszczak', "https://github.com/${System.getenv('FORKED_ORG')}")
 			.replace('http://artifactory', "http://${System.getenv('EXTERNAL_IP') ?: "localhost"}"))
 }
 
 String gitUser = new File('/usr/share/jenkins/gituser')?.text ?: "changeme"
 String gitKey = new File('/usr/share/jenkins/gitkey')?.text ?: "changeme"
+
+
+['cf-test', 'cf-stage', 'cf-prod'].each { String id ->
+	boolean credsMissing = SystemCredentialsProvider.getInstance().getCredentials().findAll {
+		it.getDescriptor().getId() == id
+	}.empty
+	if (credsMissing) {
+		println "Credential [${id}] is missing - will create it"
+		SystemCredentialsProvider.getInstance().getCredentials().add(
+				new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, id,
+						"CF credential [$id]", "admin", "admin"))
+		SystemCredentialsProvider.getInstance().save()
+	}
+}
+
+
+boolean libRepocredsMissing = SystemCredentialsProvider.getInstance().getCredentials().findAll {
+	it.getDescriptor().getId() == 'libRepoCred'
+}.empty
+if (libRepocredsMissing) {
+	println "Credential libRepoCred is missing - will create it"
+	SystemCredentialsProvider.getInstance().getCredentials().add(
+			new UsernamePasswordCredentialsImpl(CredentialsScope.GLOBAL, 'libRepoCred',
+					"LibRepoCred", "admin", "password"))
+	SystemCredentialsProvider.getInstance().save()
+}
+
 
 boolean gitCredsMissing = SystemCredentialsProvider.getInstance().getCredentials().findAll {
 	it.getDescriptor().getId() == 'git'

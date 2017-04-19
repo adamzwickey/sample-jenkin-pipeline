@@ -152,19 +152,6 @@ function deployAppToPCF() {
   restartApp "${appName}"
 }
 
-function buildGradleProperties() {
-  echo nexusPublicRepoURL=${nexusPublicRepoURL} > gradle.properties
-  echo nexusReleaseRepoURL=${nexusReleaseRepoURL} >> gradle.properties
-  echo nexusSnapshotRepoURL=${nexusSnapshotRepoURL} >> gradle.properties
-  echo nexusUsername=${nexusUsername} >> gradle.properties
-  echo nexusPassword=${nexusPassword} >> gradle.properties
-  echo buildNumber=${BUILD_NUMBER} >> gradle.properties
-  echo classifier=${BUILD_NUMBER} >> gradle.properties
-  echo cfUsername=changeme >> gradle.properties
-  echo cfPassword=changeme >> gradle.properties
-  echo ARTIFACT_TYPE=${ARTIFACT_TYPE} >> gradle.properties
-}
-
 function appExist() {
   local appName="${1}"
   cf app $appName

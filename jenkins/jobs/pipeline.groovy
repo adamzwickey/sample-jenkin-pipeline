@@ -25,6 +25,10 @@ String gitBranch = binding.variables["GIT_BRANCH"]?: "master"
 String folderDir = binding.variables["JENKIN_FOLDER"]?: "digital-shared-org"
 String scriptsDir = binding.variables["SCRIPTS_DIR"] ?: "${WORKSPACE}/jenkins/common/src/main/bash"
 String testEnv = binding.variables["TEST_ENV"]
+String cfTestCredentialId = binding.variables["CF_TEST_CREDENTIAL_ID"] ?: "cf-test"
+String cfStageCredentialId = binding.variables["CF_STAGE_CREDENTIAL_ID"] ?: "cf-stage"
+String cfProdCredentialId = binding.variables["CF_PROD_CREDENTIAL_ID"] ?: "cf-prod"
+
 
 // we're parsing the REPOS parameter to retrieve list of repos to build
 String repos = binding.variables["REPOS"]
@@ -123,11 +127,8 @@ parsedRepos.each {
 
 	dsl.job("${folderDir}/${projectName}-test-env-deploy") {
 		wrappers {
-			injectPasswords {
-				injectGlobalPasswords()
-			}
-			customTools(['cf_cli_6.22.1']) {
-						skipMasterInstallation()
+			credentialsBinding {
+				usernamePassword('cfUsername', 'cfPassword', cfTestCredentialId)
 			}
 			parameters {
 					stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
@@ -186,9 +187,6 @@ parsedRepos.each {
 		//deliveryPipelineConfiguration('Test', 'Tests on test')
 		label('zone3')
 		wrappers {
-			injectPasswords {
-				injectGlobalPasswords()
-			}
 			parameters {
 					stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
 					stringParam('PROJECT_GROUP_ID', '', 'Project Group ID')
@@ -237,7 +235,7 @@ parsedRepos.each {
 				}
 			}
 			downstreamParameterized {
-				trigger("${projectName}-test-env-load") {
+				trigger("${projectName}-staging-env-deploy") {
 					parameters {
 						currentBuild()
 //						gitRevision()
@@ -251,97 +249,10 @@ parsedRepos.each {
 		}
 	}
 
-	//Adding Load Tests here
-	dsl.job("${folderDir}/${projectName}-test-env-load") {
-		wrappers {
-			injectPasswords {
-				injectGlobalPasswords()
-			}
-			parameters {
-				stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
-				stringParam('PROJECT_GROUP_ID', '', 'Project Group ID')
-				stringParam('PROJECT_ARTIFACT_ID', '', 'Project Artifact ID')
-			}
-			environmentVariables {
-				environmentVariables(defaults.defaultEnvVars)
-			}
-			maskPasswords()
-			timeout {
-				noActivity(300)
-				failBuild()
-				writeDescription('Build failed due to timeout after {0} minutes of inactivity')
-			}
-		}
-		scm {
-			git {
-				remote {
-					name('origin')
-					url(fullGitRepo)
-					branch('${GIT_BRANCH}')
-					credentials(gitCredentials)
-				}
-				extensions {
-					wipeOutWorkspace()
-				}
-			}
-		}
-
-
-		def loadSwitches = '''\
-        -PnexusPublicRepoURL=${nexusPublicRepoURL}
-        -PnexusReleaseRepoURL=${nexusReleaseRepoURL}
-        -PnexusSnapshotRepoURL=${nexusSnapshotRepoURL}
-        -PnexusUsername=${nexusUsername}
-        -PnexusPassword=${nexusPassword}
-        -PcfUsername=${cfUsername}
-        -PcfPassword=${cfPassword}
-        -Pclassifier=RC${BUILD_NUMBER}
-        -PbuildNumber=${BUILD_NUMBER}
-        -PARTIFACT_TYPE=${RELEASE_TYPE}
-        -Dapp_base_url=https://abc.com
-        -Dhttp.proxyHost=170.217.74.84
-        -Dhttp.proxyPort=8080
-        -Dhttps.proxyHost=170.217.74.84
-        -Dhttps.proxyPort=8080
-        '''.stripIndent()
-
-		// TODO param branch
-		steps {
-			gradle {
-				switches(loadSwitches)
-				tasks("gatlingRun")
-
-			}
-			}
-		publishers {
-			archiveArtifacts {
-				pattern('build/reports/gatling/**')
-			}
-			downstreamParameterized {
-				trigger("${projectName}-staging-env-deploy") {
-					parameters {
-						currentBuild()
-						gitRevision()
-						predefinedProp('PIPELINE_VERSION', '${PIPELINE_VERSION}')
-						predefinedProp('PROJECT_ARTIFACT_ID', '${PROJECT_ARTIFACT_ID}')
-						predefinedProp('PROJECT_GROUP_ID', '${PROJECT_GROUP_ID}')
-					}
-					triggerWithNoParameters()
-				}
-			}
-		}
-
-
-
-	}
-
 	dsl.job("${folderDir}/${projectName}-staging-env-deploy") {
 		wrappers {
-			injectPasswords {
-				injectGlobalPasswords()
-			}
-			customTools(['cf_cli_6.22.1']) {
-						skipMasterInstallation()
+			credentialsBinding {
+				usernamePassword('cfUsername', 'cfPassword', cfStageCredentialId)
 			}
 			parameters {
 					stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
@@ -395,11 +306,8 @@ parsedRepos.each {
 
 	dsl.job("${folderDir}/${projectName}-prod-env-deploy") {
 		wrappers {
-			injectPasswords {
-				injectGlobalPasswords()
-			}
-			customTools(['cf_cli_6.22.1']) {
-						skipMasterInstallation()
+			credentialsBinding {
+				usernamePassword('cfUsername', 'cfPassword', cfProdCredentialId)
 			}
 			parameters {
 					stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
@@ -453,12 +361,9 @@ parsedRepos.each {
 
 	dsl.job("${folderDir}/${projectName}-promote-new-release") {
 		wrappers {
-			injectPasswords {
-				injectGlobalPasswords()
+			credentialsBinding {
+				usernamePassword('cfUsername', 'cfPassword', cfTestCredentialId)
 			}
-			customTools(['cf_cli_6.22.1']) {
-            skipMasterInstallation()
-      }
 			parameters {
 					stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
 					stringParam('PROJECT_GROUP_ID', '', 'Project Group ID')
@@ -486,12 +391,9 @@ parsedRepos.each {
 
 	dsl.job("${folderDir}/${projectName}-remove-canary") {
 		wrappers {
-			injectPasswords {
-				injectGlobalPasswords()
+			credentialsBinding {
+				usernamePassword('cfUsername', 'cfPassword', cfTestCredentialId)
 			}
-			customTools(['cf_cli_6.22.1']) {
-            skipMasterInstallation()
-      }
 			parameters {
 					stringParam('PIPELINE_VERSION', '', 'PIPE Line version')
 					stringParam('PROJECT_GROUP_ID', '', 'Project Group ID')

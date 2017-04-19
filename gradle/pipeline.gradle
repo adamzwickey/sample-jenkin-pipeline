@@ -1,0 +1,17 @@
+task groupId {
+    doLast {
+      println project.group
+    }
+}
+
+task artifactId {
+    doLast {
+      println project.name
+    }
+}
+
+task printVersion {
+    doLast {
+      println version
+    }
+}
