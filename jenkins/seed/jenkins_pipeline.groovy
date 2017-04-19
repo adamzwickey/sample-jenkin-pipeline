@@ -42,10 +42,10 @@ factory.job('jenkins-pipeline-seed') {
             stringParam('STAGE_DOMAIN', '', "STAGE DOMAIN")
             stringParam('PROD_DOMAIN', '', "PROD DOMAIN")
             stringParam('GIT_BRANCH', 'master', "branch used to build")
+            stringParam('JENKIN_FOLDER', 'my-org/pipelines', "folder for jenkin jobs generated on")
         }
     }
     steps {
-        gradle("clean build")
         dsl {
             external('jenkins/jobs/pipeline.groovy','jenkins/jobs/pipeline_view.groovy')
             removeAction('DISABLE')

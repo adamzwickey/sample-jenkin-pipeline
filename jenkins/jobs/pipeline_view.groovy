@@ -25,7 +25,7 @@ parsedRepos.each {
     filterExecutors()
     title('My Pipeline')
     displayedBuilds(5)
-    selectedJob("${my-org}/pipeline")
+    selectedJob("${folderDir}/${projectName}-build")
     alwaysAllowManualTrigger()
     showPipelineParameters()
     refreshFrequency(60)
