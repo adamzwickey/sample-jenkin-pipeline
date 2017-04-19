@@ -7,7 +7,7 @@ __DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 [[ -f "${__DIR}/pipeline.sh" ]] && source "${__DIR}/pipeline.sh" || \
     echo "No pipeline.sh found"
 
-./gradlew -PlibRepoUsername=${libRepoUsername} -PlibRepoPassword=${libRepoPassword} -PlibRepo=${REPO_WITH_JARS} clean build upload --stacktrace
+./gradlew -PlibRepoUsername=${libRepoUsername} -PlibRepoPassword=${libRepoPassword} -PlibRepo=${REPO_WITH_JARS} -PbuildNumber=${BUILD_NUMBER} clean build upload --stacktrace
 
 result=$( ./gradlew printVersion -q)
 version=$( echo "${result}" | tail -1 )
